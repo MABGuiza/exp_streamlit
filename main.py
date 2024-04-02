@@ -12,8 +12,42 @@ INIT_REQ = {
     "pays": "tunisie"
 }
 
+COLORS = [
+    # "#ffffff",
+    "#ffe3aa",
+    "#ffc655",
+    "#ffaa00",
+    "#ff7100",
+    "#ff3900",
+    "#ff0000",
+    "#d50621",
+    "#aa0b43",
+    "#801164",
+    "#551785",
+    "#2b1ca7",
+    "#0022c8",
+]
+
+COLORS_CONVERTED = [
+    # [255, 255, 255, 255],
+    [255, 227, 170, 255],
+    [255, 198, 85, 255],
+    [255, 170, 0, 255],
+    [255, 113, 0, 255],
+    [255, 57, 0, 255],
+    [255, 0, 0, 255],
+    [213, 6, 33, 255],
+    [170, 11, 67, 255],
+    [128, 17, 100, 255],
+    [85, 23, 133, 255],
+    [43, 28, 167, 255],
+    [0, 34, 200, 255],
+]
+
 with open('maps/gouvernorat.json', 'r') as f:
     geojson_data = json.load(f)
+
+st.set_page_config(page_title='Projet ELYSSA',  page_icon=":flag-tn:")
 
 if 'maps' not in st.session_state:
     st.session_state['maps'] = {}
@@ -24,9 +58,6 @@ def electionRequest(election):
         "type": "election"
     }
     return request
-
-
-st.set_page_config(page_title='Projet ELYSSA',  page_icon=":flag-tn:")
 
 
 @st.cache_data
@@ -88,11 +119,15 @@ def addMapToState(mapObject):
         # If maps exists and is not empty
         nextKey = max(st.session_state.maps.keys()) + 1
         st.session_state.maps[nextKey] = mapObject
+    st.rerun()
 
 
-def returnMap():
+@st.cache_data
+def returnMap(resultat):
+    # if resultat:
+    #     st.write(resultat['result']['result'][0]['variables'][0]['resultat'])
     mapChart = st.pydeck_chart(pdk.Deck(
-        map_style=None,
+        map_provider=None,
         initial_view_state=pdk.ViewState(
             latitude=33.9989,
             longitude=10.1658,
@@ -103,12 +138,12 @@ def returnMap():
             pdk.Layer(
                 'GeoJsonLayer',
                 data=geojson_data,
-                get_fill_color=[random.randint(0, 255), random.randint(
-                    0, 255), random.randint(0, 255)],
+                get_fill_color=COLORS_CONVERTED[0],
                 pickable=True,
                 auto_highlight=True,
-            ),]), use_container_width=True)
-
+            ),
+        ]
+    ), use_container_width=False,)
     return mapChart
 
 
@@ -118,9 +153,11 @@ election_list = [election['nom']for election in result['elections']]
 
 def main():
     st.title('Projet ELYSSA')
-    st.write(st.session_state.maps)
-    for key in st.session_state.maps.items():
-        returnMap()
+    # st.write(st.session_state.maps)
+    container = st.container(border=True, height=600)
+    with container:
+        for key, value in st.session_state.maps.items():
+            returnMap(value)
 
 
 def sideBar():
@@ -156,7 +193,6 @@ def sideBar():
         selected_election = None
         selected_parti = None
         addMapToState(mapObject)
-    st.button('refresh')
 
 
 if __name__ == "__main__":
